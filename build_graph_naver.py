@@ -38,6 +38,8 @@ with open('./data/pretrained/glove.naver.txt', 'r') as f:
     for line in f.readlines():
         data = line.split()
         word_embeddings[str(data[0])] = list(map(float, data[1:]))
+        print(list(map(float, data[1:])))
+        exit()
 #print(word_embeddings)
 
 #load document list

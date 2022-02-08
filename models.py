@@ -80,7 +80,10 @@ class GNN(nn.Module):
         return predicts
 
     def forward(self, inputs, support, mask):
-
+        
+        #inputs = inputs.cuda()
+        #support = support.cuda()
+        #mask = mask.cuda()
         x = self.layers[0](inputs, support, mask)
         outputs = self.layers[1](x, mask)
         

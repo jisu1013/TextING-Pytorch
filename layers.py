@@ -241,7 +241,7 @@ class Readout_layer(Module):
 
     def forward(self, inputs, mask):
         
-        self.mask = mask
+        self.mask = mask       
         x = inputs
 
         # soft attention

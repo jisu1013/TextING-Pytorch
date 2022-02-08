@@ -13,55 +13,64 @@ warnings.filterwarnings("ignore", category=np.VisibleDeprecationWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
 
 
-def train(train_loader, test_loader, val_data, args_config, device, output_dim):
+def train(train_loader, test_loader, val_loader, args_config, device, output_dim):
 
-    tbar = tqdm(train_loader, ascii=True)
     n_epochs = args_config.epochs
-    gnn = GNN(args_config.input_dim, output_dim) #input_dim, output_dim
+    gnn = GNN(args_config.input_dim, output_dim) 
     gnn_optimizer = torch.optim.Adam(gnn.parameters(), args_config.learning_rate)
+    
+    gnn = gnn.cuda()    
 
-    if device == "cuda":
-        gnn = gnn.cuda()
-        val_data = val_data.cuda()
-
-    best_val = 0
+    best_val = 0.
     best_epoch = 0
-    best_acc = 0  
-    batch_size = args_config.batch_size
+    best_acc = 0. 
+    batch_size = args_config.batch_size  
+    n_batch = len(train_loader)  
 
     # Train
     print('Start train')
     for epochs in tqdm(range(n_epochs)):
-        for batch in tbar:            
-            gnn_optimizer.zero_grad()           
-            adj, mask, emb, labels = batch 
-            #print(adj.dtype)            
-            outputs = gnn(emb, adj, mask)    
-            bce_loss_batch = gnn.bce_loss(outputs, labels.float()) 
+        train_loss = 0.
+        for batch in tqdm(train_loader):            
+            gnn_optimizer.zero_grad()     
+            adj, mask, emb, labels = batch   
+            outputs = gnn(emb.cuda(), adj.cuda(), mask.cuda())    
+            bce_loss_batch = gnn.bce_loss(outputs, labels.float().cuda()) 
             l2_loss_batch = gnn._l2_loss() 
             loss_batch = (l2_loss_batch + bce_loss_batch) 
-            print(' loss_batch: {:.4f}'.format(loss_batch.item()))
+            train_loss += loss_batch
+            #print(' loss_batch: {:.4f}'.format(loss_batch.item()))
             loss_batch.backward()        
             gnn_optimizer.step()        
-        
+        train_loss = train_loss / n_batch
+        print(' loss_batch: {:.4f}'.format(train_loss.item()))
+        f = open('./train_loss.txt','a')
+        f.write(str(train_loss.item())+'\n')
+        f.close()
+
         # Validation
         with torch.no_grad():
-            adj, mask, emb, labels = val_data         
-            outputs = gnn(emb, adj, mask)
-            preds = gnn.predict(outputs)
-            val_acc = accuracy(preds, labels)
+            val_acc = 0.
+            for batch in tqdm(val_loader):
+                val_adj, val_mask, val_emb, val_labels = batch     
+                outputs = gnn(val_emb.cuda(), val_adj.cuda(), val_mask.cuda())            
+                preds = gnn.predict(outputs)
+                val_acc += accuracy(preds, val_labels.float().cuda())
+            val_acc = val_acc / len(val_loader)
+            print(' validation acc : {:.4f}'.format(val_acc.item()))
             if best_val <= val_acc:
                 best_val = val_acc
-            print(' validation acc : {:.4f}'.format(val_acc.item()))
-
+        
         # Test
-        _tbar = tqdm(test_loader, ascii=True)
+        #_tbar = tqdm(test_loader, ascii=True)
         with torch.no_grad():
-            for batch in _tbar:
-                adj, mask, emb, labels = batch 
-                outputs = gnn(emb, adj, mask)
+            test_acc = 0.
+            for batch in tqdm(test_loader):
+                test_adj, test_mask, test_emb, test_labels = batch 
+                outputs = gnn(test_emb.cuda(), test_adj.cuda(), test_mask.cuda())
                 preds = gnn.predict(outputs)
-                test_acc = accuracy(preds, labels)
+                test_acc += accuracy(preds, test_labels.float().cuda())
+            test_acc = test_acc / len(test_loader)
             print(' test acc : {:.4f}'.format(test_acc.item()))
             if best_acc <= test_acc:
                 best_acc = test_acc
@@ -101,21 +110,17 @@ if __name__ == '__main__':
     test_adj, test_mask = preprocess_adj(test_adj)
     test_embed = preprocess_features(test_embed)
 
-    val_adj = torch.DoubleTensor(val_adj)
-    val_embed = torch.DoubleTensor(val_embed)
-    val_y = torch.DoubleTensor(val_y)
-    val_mask = torch.DoubleTensor(val_mask)
-
     print("Build Data Loader")
-    train_loader, test_loader = build_loader(args_config=args_config, train_adj=train_adj, train_mask=train_mask, train_emb=train_embed, train_y=train_y,
-                                             test_adj=test_adj, test_mask=test_mask, test_emb=test_embed, test_y=test_y)
+    train_loader, test_loader, val_loader = build_loader(args_config=args_config, train_adj=train_adj, train_mask=train_mask, train_emb=train_embed, train_y=train_y,
+                                             test_adj=test_adj, test_mask=test_mask, test_emb=test_embed, test_y=test_y,
+                                             val_adj=val_adj, val_mask=val_mask, val_emb=val_embed, val_y=val_y)
 
     t1 = time()
 
     best_acc, best_epoch, best_preds, best_emb = train(
         train_loader=train_loader,
         test_loader=test_loader,
-        val_data=[val_adj, val_mask, val_embed, val_y],
+        val_loader=val_loader,
         args_config=args_config,
         device=device,
         output_dim = train_y.shape[1]
@@ -123,7 +128,7 @@ if __name__ == '__main__':
 
     print(' Test Result')
     print(' Best ACC : {:.4f}'.format(best_acc.item()))
-    print(' Best Epoch : ', best_epoch.item())
+    print(' Best Epoch : ', best_epoch)
     print(' Training Time : {:.4f}'.format(time()-t1))
 
 
