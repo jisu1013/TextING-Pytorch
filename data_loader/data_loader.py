@@ -16,9 +16,7 @@ class TrainGenerator(Dataset):
         return len(self.adj)
     
     def __getitem__(self, index):      
-        #print('1', self.n_nodes)
-        train_id = np.random.randint(low=0, high=self.n_nodes, size=1)[0] #why random.sample is not working? already shuffled
-        #print('1-1', train_id)        
+        train_id = np.random.randint(low=0, high=self.n_nodes, size=1)[0]    
         adj = self.adj[train_id]
         mask = self.mask[train_id]
         emb = self.emb[train_id]

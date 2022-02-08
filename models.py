@@ -10,11 +10,9 @@ class MLP(nn.Module):
     def __init__(self, input_dim, labels):
 
         super(MLP, self).__init__()
-        #self.inputs = features
         self.input_dim = input_dim
         self.args = parse_args()
         self.output_dim = labels.shape[1]
-        #self.optimizer = torch.optim.Adam(learning_rate)
         self.layers = nn.ModuleList()
         self.labels = labels
         self.layers.append(Dense_layer(input_dim=self.input_dim,
@@ -31,7 +29,7 @@ class MLP(nn.Module):
 
         x = self.layers[0](inputs)
         output = self.layers[1](x, mask)
-
+        l2_loss = 0.
         # weight decay loss
         for weight in self.layers[0].weights:
             l2_loss += self.args.weight_decay * self._l2_loss(weight)
@@ -61,7 +59,7 @@ class GNN(nn.Module):
 
         l2_loss = 0.
         # weight decay loss
-        for weight in self.layers[0].weights: # original include bias
+        for weight in self.layers[0].weights:
             l2_loss += self.args.weight_decay * (torch.sum(weight ** 2) / 2)
         
         return l2_loss
@@ -69,7 +67,7 @@ class GNN(nn.Module):
     def bce_loss(self, outputs, labels):
 
         bce_loss = F.binary_cross_entropy_with_logits(outputs, labels)
-        bce_loss = torch.mean(bce_loss) # / labels.shape[1]
+        bce_loss = torch.mean(bce_loss)
 
         return bce_loss
     
@@ -81,9 +79,6 @@ class GNN(nn.Module):
 
     def forward(self, inputs, support, mask):
         
-        #inputs = inputs.cuda()
-        #support = support.cuda()
-        #mask = mask.cuda()
         x = self.layers[0](inputs, support, mask)
         outputs = self.layers[1](x, mask)
         

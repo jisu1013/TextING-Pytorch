@@ -31,7 +31,6 @@ def sparse_dropout(x, dropout, noise_shape):
 
 
 def sparse_dense_matmul_batch(sp_a, b):
-
     def map_function(x):
         i, dense_slice = x[0], x[1]
         sparse_slice = sp_a[i][:sp_a.shape[1]][:sp_a.shape[2]]
@@ -50,7 +49,7 @@ def dot(x, y, sparse=False):
     if sparse:
         res = sparse_dense_matmul_batch(x, y)
     else:
-        res = torch.matmul(x, y) # tf.einsum('bij,jk->bik', x, y)
+        res = torch.matmul(x, y)
 
     return res
 
@@ -59,7 +58,7 @@ def gru_unit(support, x, weights, biases, act, mask, dropout, sparse_inputs=Fals
 
     """GRU unit with 3D tensor inputs."""
     # message passing
-    support = F.dropout(support, dropout) # optional # Dropout3d
+    support = F.dropout(support, dropout)
     a = torch.matmul(support, x)
 
     # update gate        
@@ -128,9 +127,7 @@ class Graph_layer(Module):
         self.act = act
         self.input_dim = input_dim
         self.output_dim = output_dim
-        self.num_features_non = 0.
-        #self.support = support
-        #self.mask = mask
+        self.num_features_non = 0.        
         self.sparse_inputs = sparse_inputs
         self.featureless = featureless
         self.bias_use = bias_use
@@ -248,7 +245,7 @@ class Readout_layer(Module):
         att = torch.sigmoid(dot(x, self.weight_att) + self.bias_att)
         emb = self.act(dot(x, self.weight_emb) + self.bias_emb)
 
-        N = torch.sum(self.mask, dim=1) #axis=1
+        N = torch.sum(self.mask, dim=1)
         M = (self.mask - 1) * 1e-9
 
         # graph summation

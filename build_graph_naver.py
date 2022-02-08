@@ -7,8 +7,6 @@ import sys
 from tqdm import tqdm
 import networkx as nx
 
-## python build_graph_naver [window_size] [weighted_graph]
-
 dataset = 'naver'
 
 try:
@@ -31,7 +29,6 @@ print('loading raw data')
 # pre-traind word embeddings : pretrained by glove 
 # tokenized by Mecab / 한국어 위키피디아, 네이버 영화 말뭉치, KorQuAD 데이터셋
 # link: https://github.com/ratsgo/embedding/releases
-
 word_embeddings_dim = 100
 word_embeddings = {}
 with open('./data/pretrained/glove.naver.txt', 'r') as f:
@@ -40,7 +37,6 @@ with open('./data/pretrained/glove.naver.txt', 'r') as f:
         word_embeddings[str(data[0])] = list(map(float, data[1:]))
         print(list(map(float, data[1:])))
         exit()
-#print(word_embeddings)
 
 #load document list
 doc_name_list = []
@@ -52,7 +48,6 @@ with open('./data/corpus/naver.clean.train.txt', 'rb') as f:
         line = line.strip().decode('utf-8')
         doc_name_list.append(line)           
         doc_train_list.append(line)
-#print(doc_name_list, doc_train_list)
 with open('./data/corpus/naver.clean.test.txt', 'rb') as f:
     for line in f.readlines():
         line = line.strip().decode('utf-8')
@@ -69,14 +64,12 @@ with open('./data/corpus/naver.clean.txt', 'rb') as f:
 train_ids = []
 for train_name in doc_train_list:
     train_id = doc_name_list.index(train_name)
-    #print(train_id)
     train_ids.append(train_id)
 random.shuffle(train_ids)
 
 test_ids = []
 for test_name in doc_test_list:
     test_id = doc_name_list.index(test_name)
-    #print(test_id)
     test_ids.append(test_id)
 random.shuffle(test_ids)
 
@@ -89,9 +82,8 @@ for i in ids:
     shuffle_doc_words_list.append(doc_content_list[int(i)])
 
 print('build vocab')
-#build corpus vocabulary
-word_set = set()
 
+word_set = set()
 for doc_words in shuffle_doc_words_list:
     words = doc_words.split()
     word_set.update(words)
@@ -182,22 +174,15 @@ def build_graph(start, end):
         row = []
         col = []
         weight = []
-        features = []
-        #graph = nx.MultiGraph()
+        features = []       
 
         for key in word_pair_count:
             p = key[0]
-            q = key[1]
-            #weight_ = word_pair_count[key] if weighted_graph else 1.                          
-            #print(doc_word_id_map[vocab[p]], doc_word_id_map[vocab[q]])
-            #graph.add_edge(doc_word_id_map[vocab[p]], doc_word_id_map[vocab[q]], weight=weight_)
+            q = key[1]            
             row.append(doc_word_id_map[vocab[p]])
             col.append(doc_word_id_map[vocab[q]])
             weight.append(word_pair_count[key] if weighted_graph else 1.)
-        #print(graph)
-        #adj = nx.to_scipy_sparse_matrix(graph)
         adj = sp.csr_matrix((weight, (row, col)), shape=(doc_nodes, doc_nodes))
-        #print(adj, adj.shape, doc_nodes)
         for k, v in sorted(doc_word_id_map.items(), key=lambda x: x[1]):
             features.append(word_embeddings[k] if k in word_embeddings else oov[k])
 
@@ -231,6 +216,10 @@ print('max_doc_length',max(doc_len_list),'min_doc_length',min(doc_len_list),
     'average {:.2f}'.format(np.mean(doc_len_list)))
 print('training_vocab',len(vocab_train),'test_vocab',len(vocab_test),
     'intersection',len(vocab_train & vocab_test))
+'''
+max_doc_length 72 min_doc_length 1 average 14.67
+training_vocab 50120 test_vocab 29910 intersection 23456
+'''
 
 #dump objects
 with open("data/ind.{}.x_adj".format(dataset), 'wb') as f:
