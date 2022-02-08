@@ -23,7 +23,7 @@ data/corpus에 glove.naver.txt 파일로 저장되어 있습니다.
 
 graph를 build 하기 위해서 다음 코드를 실행합니다.
 ``` python
-python build_graph_naver.py [WINSIZE] 
+python build_graph_naver.py [WINSIZE] [WEIGHTED_GRAPH]
 ```
 default sliding window size는 3입니다.
 remove_words.py 다음과 같이 실행합니다.
@@ -36,18 +36,13 @@ python main.py
 ```
 parser.py에서 hyperparameter 값 변경
 
-## Citation
-```
-@inproceedings{zhang2020every,
-  title={Every Document Owns Its Structure: Inductive Text Classification via Graph Neural Networks},
-  author={Zhang, Yufeng and Yu, Xueli and Cui, Zeyu and Wu, Shu and Wen, Zhongzhen and Wang, Liang},
-  booktitle="Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics",
-  year={2020}
-}
-@inproceedings{zhang2020every,
-  title={Every Document Owns Its Structure: Inductive Text Classification via Graph Neural Networks},
-  author={Zhang, Yufeng and Yu, Xueli and Cui, Zeyu and Wu, Shu and Wen, Zhongzhen and Wang, Liang},
-  booktitle="Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics",
-  year={2020}
-}
-```
+## Result
+learning rate=0.001, epoch=100, batch size=5000, input dim=100, hidden=64, steps=2,dropout=0.3 으로 실험한 결과 (3회를 수행한 뒤 평균값)
+- ACC: 0.815
+- Time: 2007.051(s)
+
+## Reference
+- pre-trained word embedding : https://github.com/ratsgo/embedding/releases
+- model/preprocessing reference : https://github.com/CRIPAC-DIG/TextING
+- preprocessing reference : my github (https://github.com/jisu1013/DL_starting_with_PyTorch/blob/main/%EB%84%A4%EC%9D%B4%EB%B2%84_%EC%98%81%ED%99%94_%EB%A6%AC%EB%B7%B0_%EB%B6%84%EB%A5%98.ipynb) - 수강했던 수업 실습 자료입니다.
+- stopword list reference : https://bab2min.tistory.com/544#google_vignette
