@@ -1,5 +1,7 @@
 # TextING-Pytorch
 pytorch implementation of TextING
+Note that: This implementation is based on the codes of TextING.
+@ Jisu Rho (jsroh1013@gmail.com)
 
 ## Original code (tensorflow version)
 https://github.com/CRIPAC-DIG/TextING
