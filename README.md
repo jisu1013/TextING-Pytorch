@@ -18,6 +18,7 @@ the ACL2020 paper Every Document Owns Its Structure: Inductive Text Classificati
 네이버 영화 리뷰 감성 분류하기 데이터셋 (https://github.com/e9t/nsmc)
 
 ## Usage
+원티드 머신러닝 리서처 인턴 과제로 수행.
 한국어 pre-trained word embeddings을 먼저 다운 받습니다. 
 
 https://github.com/ratsgo/embedding/releases 에서 word-embeedings.zip을 다운 받아 한국어 위키피디아, 네이버 영화 말뭉치, KorQuAD 데이터셋을 Mecab으로 형태소 분석한 말뭉치를 가지고 Glove로 임베딩한 결과를 활용했습니다.
